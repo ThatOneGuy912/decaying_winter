@@ -11,6 +11,17 @@ game.StarterGui:SetCore("SendNotification", {
     Duration = 7;
 })
 
+spawn(function()
+    local ViewportSize = game.Workspace.CurrentCamera.ViewportSize
+    local IntroLogo = Drawing.new("Image")
+    IntroLogo.Data = game:HttpGet("https://i.gyazo.com/66fe8455efb2967e3142029c5d8a0616.png")
+    IntroLogo.Position = Vector2.new(ViewportSize.X / 2.8,ViewportSize.Y / 4.5)
+    IntroLogo.Size = Vector2.new(500,685)
+    IntroLogo.Visible = true
+    IntroLogo.Transparency = 1
+    wait(4)
+    IntroLogo.Remove()
+end)
 
 local namecall
 local newindex
@@ -3537,3 +3548,4 @@ else
         Duration = 7;
     })
 end
+-- shoutout to github for not pushing updates in a timely manner
