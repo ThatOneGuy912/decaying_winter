@@ -44,6 +44,7 @@ local GuiCommands = {"InfClip","InfAmmo","Godmode","OneShot","NoCooldown","InfAu
 
 local Toggles = {
     Godmode = false;
+    SemiGodmode = false;
     InfRun = true;
     AntiDebuff = false;
     Dispenser = false;
@@ -865,10 +866,13 @@ local function RenderStepped()
         end
         return
     end
-    if Toggles.LoopDrop and not Debounces.LoopDrop then
+    if Toggles.LoopDrop and not Debounces.LoopDrop and ToLoopDrop ~= "" then
         Debounces.LoopDrop = true
         if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
             WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
+        end
+        if WeaponStats[ToLoopDrop] == nil then
+            return
         end
         local AnimSet = game:GetService("ReplicatedStorage").animationSets.TPanimSets:FindFirstChild(WeaponStats[ToLoopDrop].animset)
         local Type = WeaponStats[ToLoopDrop].weapontype
@@ -994,6 +998,50 @@ local function HealOnce()
         game.Workspace.ServerStuff.getTPWeapon:FireServer("HStim", AnimSet, "Fist", nil, false)
         repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild("HStim")
         workspace.ServerStuff.dealDamage:FireServer("stimheal", nil, _G.Code1, _G.Code2)
+    end
+end
+
+local function ApplyGod(ungod)
+    local AnimSet = game.ReplicatedStorage.animationSets.TPanimSets.global
+    repeat game.Workspace.ServerStuff.getTPWeapon:FireServer("ImpN", AnimSet, "Fist", nil, false) wait() until game.Players.LocalPlayer.Character:FindFirstChild("ImpN")
+    local Previous = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(243.9402313232422, 26.216890335083008, -201.4144744873047)
+    local Target = CFrame.new(243.940231, 27.7168903, -201.414474, -1, 2.27966084e-05, -4.12229565e-06, 0, 0.177943438, 0.984040737, 2.31663253e-05, 0.984040737, -0.177943438)
+    local Damage = -6000000
+    if ungod == true then
+        if game.Players.LocalPlayer.Character ~= nil and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+            Damage = game.Players.LocalPlayer.Character.Humanoid.Health - game.Players.LocalPlayer.Character.Humanoid.MaxHealth
+        end
+    end
+    local Data = {
+    	["throwrating"] = 4,
+    	["ability"] = "Impact triggered explosive.",
+    	["animset"] = "THRW",
+    	["desc"] = "Formerly created  by a man from somewhere in Russia, this little explosive device can go boom upon impacting something! No idea what Russia is though.",
+    	["weapontype"] = "Item",
+    	["name"] = "Impact Grenade",
+    	["damagerating"] = {
+    		[1] = 0,
+    		[2] = 0,
+    		[3] = Damage
+    	},
+    	["sizerating"] = 4,
+    	["icon"] = "2331748192",
+    	["woundrating"] = 2
+    }
+    wait(0.3)
+    workspace.ServerStuff.throwWeapon:FireServer("ImpN", 0, Target, 0.19530236721038818, Data, 1, false, _G.Code1, nil, _G.Code2)
+    wait(0.5)
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = Previous
+    if EffectsTable == nil then
+        GrabEssentials()
+    end
+    for i,v in pairs(EffectsTable) do
+        if not string.find(i, "Virus") and v["effects"] ~= nil and typeof(v.effects) == "table" and v.effects["currentduration"] ~= nil and typeof(v.effects) ~= "Color3" and v.effects.colour ~= nil then
+            if v.effects.colour == false or i == "Burning" or i == "Exhaustion" or v.effects.colour == Color3.new(1,0.05,0.05) then
+                v.effects.currentduration = 0
+            end
+        end
     end
 end
 
@@ -2096,7 +2144,7 @@ local function CommandHandler(msg, speaker)
         return
     end
 
-    if IsInTable({"god","godmode","semigod","sgod","regen","instantregen","ungod","ungodmode","unsemigod","unsgod","unregen","uninstantregen"}, Args.Command) then
+    if IsInTable({"god","godmode","ungod","ungodmode"}, Args.Command) then
         local Toggle = true -- last second to default to true, rather than a toggle
         if Args[1] == "true" or Args[1] == "on" then
             Toggle = true
@@ -2106,16 +2154,39 @@ local function CommandHandler(msg, speaker)
         Toggles.Godmode = Toggle
         local currenttext = ""
         if Toggle == true then
+            ApplyGod()
+            currenttext = "God-Mode is now ON!"
+        else
+            ApplyGod(true)
+            currenttext = "God-Mode is now OFF!"
+        end
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "notification";
+            Text = currenttext;
+            Icon = "rbxassetid://2541869220";
+            Duration = 3;
+        })
+        return
+    end
+
+    if IsInTable({"semigodmode","semigod","sgod","regen","instantregen","unsemigodmode","unsemigod","unsgod","unregen","uninstantregen"}, Args.Command) then
+        local Toggle = true -- last second to default to true, rather than a toggle
+        if Args[1] == "true" or Args[1] == "on" then
+            Toggle = true
+        elseif Args[1] == "false" or Args[1] == "off" or string.sub(Args.Command, 1,2) == "un" then
+            Toggle = false
+        end
+        Toggles.SemiGodmode = Toggle
+        local currenttext = ""
+        if Toggle == true then
             if Humanoid ~= nil and Humanoid:FindFirstAncestor("Workspace") then
                 if Humanoid.Health < Humanoid.MaxHealth then
-                    for i = 1,(Humanoid.MaxHealth - Humanoid.Health) do
-                        spawn(HealOnce)
-                    end
+                    HealOnce()
                 end
             end
-            currenttext = "Godmode is now ON!"
+            currenttext = "Semi-God is now ON!"
         else
-            currenttext = "Godmode is now OFF!"
+            currenttext = "Semi-God is now OFF!"
         end
         game.StarterGui:SetCore("SendNotification", {
             Title = "notification";
@@ -3065,7 +3136,7 @@ local function CommandHandler(msg, speaker)
     end
 
 
-    if IsInTable({"loopdrop","droploop","keepdropping","spawnloop","rapiddrop","rapidspawn","unloopdrop","undroploop","unkeepdropping","unspawnloop","unrapiddrop","unrapidspawn"}, Args.Command) then
+    if IsInTable({"loopdrop","loopspawn","droploop","keepdropping","spawnloop","rapiddrop","rapidspawn","unloopdrop","unloopspawn","undroploop","unkeepdropping","unspawnloop","unrapiddrop","unrapidspawn"}, Args.Command) then
         local Toggle = true -- last second to default to true, rather than a toggle
         if Args[1] == "false" or Args[1] == "off" or string.sub(Args.Command, 1,2) == "un" then
             Toggle = false
@@ -3082,18 +3153,22 @@ local function CommandHandler(msg, speaker)
             if Args[3] ~= nil then
                 Args[1] = Args[1].." "..Args[3]
             end
+            local FoundToDrop = false
             for i,v in pairs(Weapons) do
                 if string.sub(string.lower(i),1,#Args[1]) == string.lower(Args[1]) then
                     ToLoopDrop = v
+                    FoundToDrop = true
                     break
                 end
+            end
+            if FoundToDrop == false then
+                return
             end
             if RenderStepConnection == nil then
                 RenderStepConnection = game:GetService("RunService").Stepped:Connect(RenderStepped)
             end
             currenttext = "LoopDrop is now ON!"
         else
-            ToLoopDrop = ""
             local LoopOff = false
             for i = 1,#LoopedFeatures do
                 if Toggles[LoopedFeatures[i]] == true then
@@ -3105,6 +3180,7 @@ local function CommandHandler(msg, speaker)
                 RenderStepConnection:Disconnect()
                 RenderStepConnection = nil
             end
+            ToLoopDrop = ""
             currenttext = "LoopDrop is now OFF!"
         end
         game.StarterGui:SetCore("SendNotification", {
@@ -3522,8 +3598,11 @@ print([[
 
 COMMANDS CAN BE DONE AS /e command OR :command
 
-:godmode - Regens you when you take damage. (Won't save you from dynamite)
-:ungodmode -- Turns off godmode
+:god - Gives you an obscene amount of health (VERY obvious to teammates)
+:ungod - Brings you back to normal health
+
+:sgod - Regens you when you take damage. (Won't save you from dynamite)
+:unsgod -- Turns off semi godmode
 
 :nodebuff - Blocks all status effects. Moral, burning, bleeding, broken limbs, etc
 :unnodebuff - Turns off no-debuff
@@ -3578,6 +3657,9 @@ COMMANDS CAN BE DONE AS /e command OR :command
 
 :spawn WEAPONNAME - gives you WEAPONNAME (cannot be dropped) (guns require an empty slot)
 :weaponnames - prints all the available weapon names in the dev console
+
+:loopdrop ITEMNAME - rapidly drops ITEMNAME
+:unloopdrop ITEMNAME
 
 :infaux - Gives you infinite auxiliary equipment (Activated with C Key)
 :uninfaux - Turns off infaux
