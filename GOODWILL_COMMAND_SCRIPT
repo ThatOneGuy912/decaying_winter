@@ -1847,24 +1847,6 @@ namecall = hookmetamethod(game, "__namecall", function(self, ...)
             CurrentWeapon = Args[1]
             spawn(UpdateMiscWeaponry)
         end
-        if tostring(self) == "deathPlay" then
-            local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
-            local TempUpValues = getupvalues(TempEnv.start_dual_wield)
-            for i,v in pairs(TempUpValues) do
-                if typeof(v) == "table" and v[1] ~= nil and typeof(v[1]) == "table" and typeof(v[1][1]) == "string" and typeof(v[1][2]) == "boolean" then
-                    for x,y in pairs(v) do
-                        if table.find(DevWeapons,y[1]) then
-                            v[x] = {"Fist", false, nil}
-                        end
-                    end
-                end
-            end
-            spawn(function()
-                wait(1)
-                game.Workspace.ServerStuff.deathPlay.FireServer(game.Workspace.ServerStuff.deathPlay)
-            end)
-            return
-        end
         if tostring(self) == "throwWeapon" then
             if table.find(DevWeapons,tostring(Args[1])) then
                 if game.Players.LocalPlayer.Character ~= nil and game.Players.LocalPlayer.Character.FindFirstChild(game.Players.LocalPlayer.Character, "hasPrimary") then
@@ -1882,7 +1864,7 @@ namecall = hookmetamethod(game, "__namecall", function(self, ...)
             end
             return namecall(self, unpack(Args))
         end
-        if tostring(self) == "callEvent" then
+        if tostring(self) == "callEvent" and Args[1] ~= "poke" and Args[1] ~= "self_gun"  then
             return
         end
         if tostring(self) == "initiateblock" and Toggles.AutoParry then
@@ -1937,7 +1919,10 @@ namecall = hookmetamethod(game, "__namecall", function(self, ...)
             return namecall(self, unpack(Args))
         end
         if tostring(self) == "applyGore" then
-            if string.find(tostring(Args[1]), "fire") then
+            if string.find(tostring(Args[1]), "fire") and Args[4] ~= nil and typeof(Args[4]) == "table" and #Args[4] <= 2 then
+                return namecall(self, unpack(Args))
+            end
+            if string.find(tostring(Args[1]), "fire") and Args[4] ~= nil and typeof(Args[4]) == "table" and #Args[4] >= 3 then
                 local AnimSet = game.ReplicatedStorage.animationSets.TPanimSets.FindFirstChild(game.ReplicatedStorage.animationSets.TPanimSets,WeaponStats[ShownWeapon].animset)
                 game.Workspace.ServerStuff.getTPWeapon.FireServer(game.Workspace.ServerStuff.getTPWeapon,ShownWeapon, AnimSet, "Fist", nil, false)
             end
@@ -1961,7 +1946,6 @@ namecall = hookmetamethod(game, "__namecall", function(self, ...)
                         [10] = WeaponStats[CurrentWeapon]
                     }
                     if not Toggles.OneShot then
-print("FUCKING WORK")
                         game.Workspace.ServerStuff.dealDamage.FireServer(game.Workspace.ServerStuff.dealDamage, FiringArgs, nil, _G.Code1, _G.Code2)
                     else
                         for i = 1,math.floor((Target.Humanoid.Health/Damage)) + 1 do
