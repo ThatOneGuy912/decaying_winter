@@ -35,8 +35,9 @@ local GrenadeRainDamage = 5
 local AkimboActive = false
 local AuxFunction = nil
 local CurrentTrap = "Proximity Mine"
+local ToLoopDrop = ""
 -- local CameraShakeFunction
-local LoopedFeatures = {"KillAura","GrenadeRain","SuperRun"}
+local LoopedFeatures = {"KillAura","GrenadeRain","SuperRun","LoopDrop"}
 local DevWeapons = {"RVolver","JBox","LSMini","GMSword","EMSword","CMMaul","PLBlade"}
 local GuiCommands = {"InfClip","InfAmmo","Godmode","OneShot","NoCooldown","InfAux","SilentAim","AutoParry","KillAura","VirusBlock","AntiDebuff","NoHunger","AntiFallDamage","AntiRecoil","SuperRun"}
 
@@ -62,6 +63,7 @@ local Toggles = {
     AutoKill = false;
     GrenadeRain = false;
     InfAux = false;
+    LoopDrop = false;
 }
 
 
@@ -96,6 +98,7 @@ local Debounces = {
     Dispensing = false;
     Killing = false;
     Trap = false;
+    LoopDrop = false;
 }
 
 local WeaponStats = nil
@@ -499,6 +502,7 @@ local Weapons = {
     ["SIG MPX"] = "SubMPX";
     ["MPX"] = "SubMPX";
     ["SubMPX"] = "SubMPX";
+    ["Container Zero"] = "AgentCD";
 }
 
 local EspObjects = {
@@ -860,6 +864,39 @@ local function RenderStepped()
             end
         end
         return
+    end
+    if Toggles.LoopDrop and not Debounces.LoopDrop then
+        Debounces.LoopDrop = true
+        if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
+            WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
+        end
+        local AnimSet = game:GetService("ReplicatedStorage").animationSets.TPanimSets:FindFirstChild(WeaponStats[ToLoopDrop].animset)
+        local Type = WeaponStats[ToLoopDrop].weapontype
+        local Uses = 1
+        local ToDropStats = WeaponStats[ToLoopDrop]
+        local NewStatsTable = {}
+        if Type == "Gun" and game.ReplicatedStorage.Weapons:FindFirstChild(ToLoopDrop) and game.ReplicatedStorage.Weapons[ToLoopDrop]:FindFirstChild("ammo") then
+            Uses = game.ReplicatedStorage.Weapons[ToLoopDrop].ammo.Value
+        end
+        for i,v in pairs(ToDropStats) do
+            NewStatsTable[i] = v
+        end
+        for i,v in pairs(NewStatsTable) do
+            if string.sub(i,#i - 2,-1) ~= "old" and NewStatsTable[i.."old"] ~= nil then
+                NewStatsTable[i] = NewStatsTable[i.."old"]
+            end
+        end
+        for i,v in pairs(NewStatsTable) do
+            if string.sub(i,#i - 2,-1) == "old" then
+                v = nil
+            end
+        end
+        game.Workspace.ServerStuff.getTPWeapon:FireServer(ToLoopDrop, AnimSet, "Fist", nil, false)
+        repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild(ToLoopDrop) or ToLoopDrop == ""
+        local cframe = CFrame.new(381.598999, -1.04327154, -48.8513374, -0.0525665507, -0.320858359, 0.945667326, -7.67457823e-05, 0.946977854, 0.321298748, -0.99861747, 0.0168169905, -0.0498039834)
+        workspace.ServerStuff.throwWeapon:FireServer(ToLoopDrop, nil, cframe, "drop", NewStatsTable, Uses, false, _G.Code1, nil, _G.Code2)
+        wait(0.3)
+        Debounces.LoopDrop = false
     end
     if Toggles.GrenadeRain then
         local Data = {
@@ -3024,6 +3061,58 @@ local function CommandHandler(msg, speaker)
         TempEnv = nil
         TempUpValues = nil
         ClipLabel.Text = Args[1]
+        return
+    end
+
+
+    if IsInTable({"loopdrop","droploop","keepdropping","spawnloop","rapiddrop","rapidspawn","unloopdrop","undroploop","unkeepdropping","unspawnloop","unrapiddrop","unrapidspawn"}, Args.Command) then
+        local Toggle = true -- last second to default to true, rather than a toggle
+        if Args[1] == "false" or Args[1] == "off" or string.sub(Args.Command, 1,2) == "un" then
+            Toggle = false
+        end
+        Toggles.LoopDrop = Toggle
+        local currenttext = ""
+        if Toggle == true then
+            if Args[1] == nil then
+                return
+            end
+            if Args[2] ~= nil then
+                Args[1] = Args[1].." "..Args[2]
+            end
+            if Args[3] ~= nil then
+                Args[1] = Args[1].." "..Args[3]
+            end
+            for i,v in pairs(Weapons) do
+                if string.sub(string.lower(i),1,#Args[1]) == string.lower(Args[1]) then
+                    ToLoopDrop = v
+                    break
+                end
+            end
+            if RenderStepConnection == nil then
+                RenderStepConnection = game:GetService("RunService").Stepped:Connect(RenderStepped)
+            end
+            currenttext = "LoopDrop is now ON!"
+        else
+            ToLoopDrop = ""
+            local LoopOff = false
+            for i = 1,#LoopedFeatures do
+                if Toggles[LoopedFeatures[i]] == true then
+                    LoopOff = true
+                    break
+                end
+            end
+            if RenderStepConnection ~= nil and LoopOff then
+                RenderStepConnection:Disconnect()
+                RenderStepConnection = nil
+            end
+            currenttext = "LoopDrop is now OFF!"
+        end
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "notification";
+            Text = currenttext;
+            Icon = "rbxassetid://2541869220";
+            Duration = 3;
+        })
         return
     end
 
