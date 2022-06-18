@@ -867,6 +867,7 @@ local function RenderStepped()
         return
     end
     if Toggles.LoopDrop and not Debounces.LoopDrop and ToLoopDrop ~= "" then
+        local Current = ToLoopDrop
         Debounces.LoopDrop = true
         if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
             WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
@@ -896,7 +897,7 @@ local function RenderStepped()
             end
         end
         game.Workspace.ServerStuff.getTPWeapon:FireServer(ToLoopDrop, AnimSet, "Fist", nil, false)
-        repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild(ToLoopDrop) or ToLoopDrop == ""
+        repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild(ToLoopDrop) or ToLoopDrop == "" or ToLoopDrop ~= Current
         local cframe = CFrame.new(381.598999, -1.04327154, -48.8513374, -0.0525665507, -0.320858359, 0.945667326, -7.67457823e-05, 0.946977854, 0.321298748, -0.99861747, 0.0168169905, -0.0498039834)
         workspace.ServerStuff.throwWeapon:FireServer(ToLoopDrop, nil, cframe, "drop", NewStatsTable, Uses, false, _G.Code1, nil, _G.Code2)
         wait(0.3)
