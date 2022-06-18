@@ -11,6 +11,7 @@ game.StarterGui:SetCore("SendNotification", {
     Duration = 7;
 })
 
+
 local namecall
 local newindex
 local DamageTypes = {"burning","bleed","toxicated","sepsis"}
@@ -2188,6 +2189,7 @@ local function CommandHandler(msg, speaker)
             Toggle = false
         end
         Toggles.NoCooldown = Toggle
+        --[[
         local Connections = getconnections(workspace.ServerStuff.playerMatsHandler.OnClientEvent)
         local TargetTable = nil
         for i,v in pairs(getupvalues(Connections[1].Function)) do
@@ -2195,6 +2197,9 @@ local function CommandHandler(msg, speaker)
                 TargetTable = v
             end
         end
+        --]]
+        local Stats = require(game:GetService("Workspace").ServerStuff.Statistics["CLASS_STATISTICS"])
+        local TargetTable = Stats[game.Players.LocalPlayer.Character.current_perk.Value]
         if TargetTable == nil then
             return
         end
@@ -3536,4 +3541,3 @@ else
         Duration = 7;
     })
 end
--- shoutout to github for not pushing updates in a timely manner
