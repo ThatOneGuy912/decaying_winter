@@ -813,13 +813,10 @@ local function Kill(Model)
         local ReplacementGun = "FNLMG"
         if WeaponInfo ~= nil then
             WeaponType = WeaponInfo.weapontype
-        else
-            print("eat my ass")
         end
         if WeaponType ~= "Gun" then
             local AnimSet = game:GetService("ReplicatedStorage").animationSets.TPanimSets:FindFirstChild(WeaponStats[ReplacementGun].animset)
             game.Workspace.ServerStuff.getTPWeapon:FireServer(ReplacementGun, AnimSet, "Fist", nil, false)
-            print("set to "..ReplacementGun)
             WaitForGun = true
         end
         if WaitForGun then
@@ -831,7 +828,6 @@ local function Kill(Model)
         if TargetPart == nil then
             return
         end
-        print("ya")
         local Data = {
         	[1] = "gundamage",
         	[2] = Model,
