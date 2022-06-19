@@ -65,6 +65,7 @@ local Toggles = {
     GrenadeRain = false;
     InfAux = false;
     LoopDrop = false;
+    ThrowingKnives = false;
 }
 
 
@@ -2867,9 +2868,11 @@ local function CommandHandler(msg, speaker)
         Toggles.AutoKill = Toggle
         local currenttext = ""
         if Toggle == true then
-            for i = 1,#Enemies do
-                if Enemies[i] ~= nil and Enemies[i]:FindFirstChild("Head") then
-                    KnifeKill(Enemies[i],true)
+            for i,v in pairs(game.Workspace:GetDescendants()) do
+                if v:IsA("Model") and v:FindFirstChild("Torso") and v:FindFirstChild("Humanoid") then
+                    if v.Parent.Name == "activeHostiles" or v.Parent.Name == "NoTarget" then
+                        KnifeKill(v,true)
+                    end
                 end
             end
             currenttext = "AutoKill is now ON!"
@@ -2887,9 +2890,11 @@ local function CommandHandler(msg, speaker)
 
     if IsInTable({"killenemies","killall","removeenemies","killothers","enemykill","clearenemies","clearhazards","enemieskill","unkillenemies","unkillall","unremoveenemies","unkillothers","unenemykill","unclearenemies","unclearhazards","unenemieskill"}, Args.Command) then
         local Amount = tonumber(Args[1]) or math.huge
-        for i = 1,#Enemies do
-            if Enemies[i] ~= nil and Enemies[i]:FindFirstChild("Head") and game.Players.LocalPlayer:DistanceFromCharacter(Enemies[i].Head.Position) <= Amount then
-                KnifeKill(Enemies[i])
+        for i,v in pairs(game.Workspace:GetDescendants()) do
+            if v:IsA("Model") and v:FindFirstChild("Torso") and v:FindFirstChild("Humanoid") and game.Players.LocalPlayer:DistanceFromCharacter(v.Torso.Position) <= Amount then
+                if v.Parent.Name == "activeHostiles" or v.Parent.Name == "NoTarget" then
+                    KnifeKill(v,true)
+                end
             end
         end
         game.StarterGui:SetCore("SendNotification", {
@@ -3308,23 +3313,31 @@ mouse.KeyDown:Connect(function(key)
         return
     end
     if key == "y" and _G.Code1 ~= nil and _G.Code2 ~= nil then
-        local Data = {
-        	["throwrating"] = 4,
-        	["ability"] = "Impact triggered explosive.",
-        	["animset"] = "THRW",
-        	["woundrating"] = 2,
-        	["weapontype"] = "Item",
-        	["name"] = "Impact Grenade",
-        	["damagerating"] = {
-        		[1] = 0,
-        		[2] = 0,
-        		[3] = 150
-        	},
-        	["icon"] = "2331748192",
-        	["sizerating"] = 4,
-        	["desc"] = "Formerly created  by a man from somewhere in Russia, this little explosive device can go boom upon impacting something! No idea what Russia is though."
-        }
-        game.Workspace.ServerStuff.throwWeapon:FireServer("ImpN", 0, game.Workspace.CurrentCamera.CFrame, 0.1960853934288, Data, nil, false, _G.Code1, nil, _G.Code2)
+        Toggles.ThrowingKnives = true
+        repeat
+            local Data = {
+            	["throwrating"] = 4,
+            	["ability"] = "Lightweight and sharp.",
+            	["blacklisted"] = true,
+            	["animset"] = "1HBL",
+            	["desc"] = "Formerly used for a sport where competitors would throw knives at each-other and whoever could catch it with their palm would win a prize! Now you can re-enact that beautiful sport again with these!",
+            	["weapontype"] = "Item",
+            	["name"] = "Throwing Knife",
+            	["damagerating"] = {
+            		[1] = 50,
+            		[2] = 50
+            	},
+            	["icon"] = "2481852009",
+            	["sizerating"] = 3,
+            	["woundrating"] = 1
+            }
+            local CameraCFrame = game.Workspace.CurrentCamera.CFrame
+            local Position = CFrame.new(CameraCFrame.p + Vector3.new(math.random(-12,12),math.random(-3,12),5),mouse.Hit.p)
+            spawn(function()
+                workspace.ServerStuff.throwWeapon:FireServer("TKnife", 1000, Position, 0.19341856241226196, Data, 0, false, _G.Code1, nil, _G.Code2)
+            end)
+            wait(0.0000000000000000001)
+        until Toggles.ThrowingKnives == false
         return
     end
 --[[
@@ -3430,6 +3443,9 @@ mouse.KeyUp:Connect(function(key)
     if key == "d" then
         SuperRun.DHeld = false
         return
+    end
+    if key == "y" and _G.Code1 ~= nil and _G.Code2 ~= nil then
+        Toggles.ThrowingKnives = false
     end
 end)
 
@@ -3604,14 +3620,23 @@ game.Workspace.DescendantAdded:Connect(function(v)
     elseif v:IsA("Model") and v:FindFirstAncestor("FPArms") and v.Name ~= "LeftArm" and v.Name ~= "RightArm" then
         ShownWeapon = v.Name
     end
-    if v.Parent ~= nil and v.Parent.Name == "activeHostiles" or v.Parent ~= nil and v.Parent.Name == "NoTarget" then
-        if v:IsA("Model") then
+end)
+
+game.Players.ChildAdded:Connect(function(child)
+    if child:IsA("Model") then
+        local NpcValue = child:WaitForChild("npc")
+        if NpcValue.Value == nil then
+            NpcValue.Changed:Wait()
+        end
+        local Model = NpcValue.Value
+        if Model:IsA("Model") then
             if Toggles.AutoKill then
-                local Head = v:WaitForChild("Torso",20)
-                KnifeKill(v,true)
+                local Torso = Model:WaitForChild("Torso",20)
+                local Torso = Model:WaitForChild("Humanoid",20)
+                KnifeKill(Model,true)
                 return
             end
-            table.insert(Enemies, v)
+            table.insert(Enemies, Model)
         end
     end
 end)
@@ -3707,6 +3732,7 @@ COMMANDS CAN BE DONE AS /e command OR :command
 N Key: Heal and remove effects
 M Key: Remove effects
 U Key: Place set trap (use :settrap TRAPNAME to change the trap set with this key)
+Y Key: Hold to spam throw throwing knives, which one shot enemies
 T Key: Access game & Goodwill GUI
 
 L Key: Toggle super run
