@@ -764,13 +764,13 @@ local EspInfo = {
     };
 }
 
-local function KnifeKill(Model,Killaura)
+local function KnifeKill(Model,UntilDeath)
     if Model.Parent ~= nil and Model.Parent.Name == "activeHostiles" or Model.Parent ~= nil and Model.Parent.Name == "NoTarget" then
-        local TargetPart = Model:FindFirstChild("Torso")
+        local TargetPart = Model:FindFirstChild("Torso") or Model:FindFirstChild("Head")
         if TargetPart == nil then
             return
         end
-        if Model:FindFirstChild("Humanoid") and Model.Humanoid.Health == 0 then
+        if not Model:FindFirstChild("Humanoid") or Model.Humanoid.Health <= 0 then
             return
         end
         local Data = {
@@ -791,11 +791,20 @@ local function KnifeKill(Model,Killaura)
         }
         local Position = CFrame.new(TargetPart.CFrame.p + Vector3.new(0,0,math.random(-2,2)),TargetPart.CFrame.p)
         if _G.Code1 ~= nil and _G.Code2 ~= nil then
-            spawn(function()
-                workspace.ServerStuff.throwWeapon:FireServer("TKnife", 1000, Position, 0.19341856241226196, Data, 0, false, _G.Code1, nil, _G.Code2)
-            end)
+            if UntilDeath == true then
+                repeat 
+                    spawn(function()
+                        local Position = CFrame.new(TargetPart.CFrame.p + Vector3.new(math.random(-2,2),math.random(-2,2),math.random(-2,2)),TargetPart.CFrame.p)
+                        workspace.ServerStuff.throwWeapon:FireServer("TKnife", 1000, Position, 0.19341856241226196, Data, 0, false, _G.Code1, nil, _G.Code2)
+                    end)
+                    wait()
+                until Model == nil or not Model:FindFirstAncestor("Workspace") or not Model:FindFirstChild("Humanoid") or Model.Humanoid.Health <= 0
+            else
+                spawn(function()
+                    workspace.ServerStuff.throwWeapon:FireServer("TKnife", 1000, Position, 0.19341856241226196, Data, 0, false, _G.Code1, nil, _G.Code2)
+                end)
+            end
         end
-        Debounces.Killing = false
     end
 end
 
@@ -865,7 +874,7 @@ local function RenderStepped()
     if Toggles.KillAura then
         for i = 1,#Enemies do
             if Enemies[i] ~= nil and Enemies[i]:FindFirstChild("Torso") and game.Players.LocalPlayer:DistanceFromCharacter(Enemies[i].Torso.Position) <= KillAuraDistance then
-                Kill(Enemies[i])
+                KnifeKill(Enemies[i])
             end
         end
         return
@@ -1062,6 +1071,13 @@ local function HealthChanged(Health)
         -- for i = 1,(Humanoid.MaxHealth - Health) do
             spawn(HealOnce)
         -- end
+    end
+end
+
+local function RemoveMark(child)
+    if child.Name == "playerflagged" then
+        wait()
+        child.Parent = nil
     end
 end
 
@@ -2853,8 +2869,7 @@ local function CommandHandler(msg, speaker)
         if Toggle == true then
             for i = 1,#Enemies do
                 if Enemies[i] ~= nil and Enemies[i]:FindFirstChild("Head") then
-                    KnifeKill(Enemies[i])
-                    wait(0.5)
+                    KnifeKill(Enemies[i],true)
                 end
             end
             currenttext = "AutoKill is now ON!"
@@ -2875,7 +2890,6 @@ local function CommandHandler(msg, speaker)
         for i = 1,#Enemies do
             if Enemies[i] ~= nil and Enemies[i]:FindFirstChild("Head") and game.Players.LocalPlayer:DistanceFromCharacter(Enemies[i].Head.Position) <= Amount then
                 KnifeKill(Enemies[i])
-                wait(0.5)
             end
         end
         game.StarterGui:SetCore("SendNotification", {
@@ -3422,10 +3436,12 @@ end)
 
 repeat wait() until game.Players.LocalPlayer.Character ~= nil
 repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild("Head")
 
 Humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
 
 Humanoid.HealthChanged:Connect(HealthChanged)
+game.Players.LocalPlayer.Character.Head.ChildAdded:Connect(RemoveMark)
 
 repeat wait() until game.Workspace:FindFirstChild("activePlayers")
 game.Workspace.activePlayers.ChildAdded:Connect(function(child)
@@ -3437,6 +3453,11 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
     _G.Code2 = nil
     repeat wait() until character:FindFirstChild("Humanoid")
     Humanoid = character:FindFirstChild("Humanoid")
+    repeat wait() until character:FindFirstChild("Head")
+    character.Head.ChildAdded:Connect(RemoveMark)
+    for i,v in pairs(character.Head:GetChildren()) do
+        RemoveMark(v)
+    end
     -- print("peesuck")
     Humanoid.HealthChanged:Connect(HealthChanged)
     repeat wait() until game.Players.LocalPlayer:FindFirstChild("PlayerGui")
@@ -3586,7 +3607,8 @@ game.Workspace.DescendantAdded:Connect(function(v)
     if v.Parent ~= nil and v.Parent.Name == "activeHostiles" or v.Parent ~= nil and v.Parent.Name == "NoTarget" then
         if v:IsA("Model") then
             if Toggles.AutoKill then
-                Kill(v)
+                local Head = v:WaitForChild("Torso",20)
+                KnifeKill(v,true)
                 return
             end
             table.insert(Enemies, v)
