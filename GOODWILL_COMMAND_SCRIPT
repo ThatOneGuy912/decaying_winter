@@ -801,29 +801,37 @@ end
 
 local function Kill(Model)
     if _G.Code1 ~= nil and _G.Code2 ~= nil and Model:FindFirstChild("Torso") then
+        if not Model:FindFirstChild("Humanoid") or Model.Humanoid.Health <= 0 then
+            return
+        end
         if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
             WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
         end
         local WeaponInfo = WeaponStats[tostring(CurrentWeapon)] or nil
         local WeaponType = "Fists"
+        local WaitForGun = false
+        local ReplacementGun = "FNLMG"
         if WeaponInfo ~= nil then
             WeaponType = WeaponInfo.weapontype
+        else
+            print("eat my ass")
         end
         if WeaponType ~= "Gun" then
-            local AnimSet = game:GetService("ReplicatedStorage").animationSets.TPanimSets:FindFirstChild(WeaponStats["AMR"].animset)
-            game.Workspace.ServerStuff.getTPWeapon:FireServer("AMR", AnimSet, "Fist", nil, false)
-            print("SET TO AMR")
+            local AnimSet = game:GetService("ReplicatedStorage").animationSets.TPanimSets:FindFirstChild(WeaponStats[ReplacementGun].animset)
+            game.Workspace.ServerStuff.getTPWeapon:FireServer(ReplacementGun, AnimSet, "Fist", nil, false)
+            print("set to "..ReplacementGun)
+            WaitForGun = true
         end
-        local ToClaim = game.Players.LocalPlayer.Character:WaitForChild(CurrentWeapon,5)
-        if ToClaim == nil then
-            return
+        if WaitForGun then
+            repeat wait() until game.Players.LocalPlayer.Character:FindFirstChild(ReplacementGun)
         end
-        game.Workspace.ServerStuff.claimItem.InvokeServer(game.Workspace.ServerStuff.claimItem,ToClaim)
+        game.Workspace.ServerStuff.claimItem:InvokeServer(game.Players.LocalPlayer.Character:FindFirstChildOfClass("Model"))
         WeaponInfo = WeaponStats[tostring(CurrentWeapon)]
-        local TargetPart = Model:FindFirstChild("Torso") or Model:FindFirstChild("Head")
+        local TargetPart =  Model:FindFirstChild("Head") or Model:FindFirstChild("Torso")
         if TargetPart == nil then
             return
         end
+        print("ya")
         local Data = {
         	[1] = "gundamage",
         	[2] = Model,
@@ -837,7 +845,7 @@ local function Kill(Model)
         	[10] = WeaponInfo
         }
         workspace.ServerStuff.dealDamage:FireServer(Data, nil, _G.Code1, _G.Code2)
-        if Toggles.Godmode then
+        if Toggles.SemiGodmode then
             game.Workspace.ServerStuff.getTPWeapon:FireServer("HStim", AnimSet, "Fist", nil, false)
         end
     end
