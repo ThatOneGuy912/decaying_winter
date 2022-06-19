@@ -1950,8 +1950,14 @@ namecall = hookmetamethod(game, "__namecall", function(self, ...)
             end
             return namecall(self, unpack(Args))
         end
-        if tostring(self) == "callEvent" and Args[1] ~= "poke" and Args[1] ~= "self_gun"  then
-            return
+        if tostring(self) == "callEvent" then
+            if Args[1] == "poke" or Args[1] == "self_gun"  then
+                if game.Players.LocalPlayer.Character ~= nil then
+                    game.Players.LocalPlayer.Character.BreakJoints(game.Players.LocalPlayer.Character)
+                end
+            else
+                return
+            end
         end
         if tostring(self) == "initiateblock" and Toggles.AutoParry then
             if Args[2] ~= nil and Args[2] == false then
