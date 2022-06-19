@@ -39,7 +39,7 @@ local ToLoopDrop = ""
 -- local CameraShakeFunction
 local LoopedFeatures = {"KillAura","GrenadeRain","SuperRun","LoopDrop"}
 local DevWeapons = {"RVolver","JBox","LSMini","GMSword","EMSword","CMMaul","PLBlade"}
-local GuiCommands = {"InfClip","InfAmmo","Godmode","OneShot","NoCooldown","InfAux","SilentAim","AutoParry","KillAura","VirusBlock","AntiDebuff","NoHunger","AntiFallDamage","AntiRecoil","SuperRun"}
+local GuiCommands = {"InfClip","InfAmmo","Godmode","SemiGodmode","OneShot","NoCooldown","InfAux","SilentAim","AutoParry","KillAura","VirusBlock","AntiDebuff","NoHunger","AntiFallDamage","AntiRecoil","SuperRun"}
 
 
 local Toggles = {
@@ -1052,7 +1052,7 @@ end
 
 
 local function HealthChanged(Health)
-    if not Toggles.Godmode then
+    if not Toggles.SemiGodmode then
         return
     end
     if Humanoid == nil or not Humanoid:FindFirstAncestor("Workspace") then
