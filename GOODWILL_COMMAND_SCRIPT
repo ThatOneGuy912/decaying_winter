@@ -819,22 +819,10 @@ local function KnifeKill(Model,UntilDeath)
         if not Model:FindFirstChild("Humanoid") or Model.Humanoid.Health <= 0 then
             return
         end
-        local Data = {
-        	["throwrating"] = 4,
-        	["ability"] = "Lightweight and sharp.",
-        	["blacklisted"] = true,
-        	["animset"] = "1HBL",
-        	["desc"] = "Formerly used for a sport where competitors would throw knives at each-other and whoever could catch it with their palm would win a prize! Now you can re-enact that beautiful sport again with these!",
-        	["weapontype"] = "Item",
-        	["name"] = "Throwing Knife",
-        	["damagerating"] = {
-        		[1] = 50,
-        		[2] = 50
-        	},
-        	["icon"] = "2481852009",
-        	["sizerating"] = 3,
-        	["woundrating"] = 1
-        }
+        if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
+            WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
+        end
+        local Data = WeaponStats["TKnife"]
         local Position = CFrame.new(TargetPart.CFrame.p + Vector3.new(0,0,math.random(-2,2)),TargetPart.CFrame.p)
         if _G.Code1 ~= nil and _G.Code2 ~= nil then
             if UntilDeath == true then
@@ -2505,13 +2493,20 @@ local function CommandHandler(msg, speaker)
     if speaker ~= game.Players.LocalPlayer then
         return
     end
-
+--[[
     if IsInTable({"god","godmode","ungod","ungodmode"}, Args.Command) then
         local Toggle = true -- last second to default to true, rather than a toggle
         if Args[1] == "true" or Args[1] == "on" then
             Toggle = true
         elseif Args[1] == "false" or Args[1] == "off" or string.sub(Args.Command, 1,2) == "un" then
             Toggle = false
+        end
+        if game.PlaceId ~= 9880062154 then
+            if Toggle then
+                game.Players:Chat(":sgod")
+            else
+                game.Players:Chat(":unsgod")
+            end
         end
         Toggles.Godmode = Toggle
         local currenttext = ""
@@ -2530,8 +2525,9 @@ local function CommandHandler(msg, speaker)
         })
         return
     end
+--]]
 
-    if IsInTable({"semigodmode","semigod","sgod","regen","instantregen","unsemigodmode","unsemigod","unsgod","unregen","uninstantregen"}, Args.Command) then
+    if IsInTable({"semigodmode","semigod","sgod","regen","instantregen","unsemigodmode","unsemigod","unsgod","unregen","uninstantregen","god","godmode","ungod","ungodmode"}, Args.Command) then
         local Toggle = true -- last second to default to true, rather than a toggle
         if Args[1] == "true" or Args[1] == "on" then
             Toggle = true
@@ -3672,22 +3668,10 @@ mouse.KeyDown:Connect(function(key)
         if CurrentThrowable == "TKnife" then
             Toggles.ThrowingKnives = true
             repeat
-                local Data = {
-                	["throwrating"] = 4,
-                	["ability"] = "Lightweight and sharp.",
-                	["blacklisted"] = true,
-                	["animset"] = "1HBL",
-                	["desc"] = "Formerly used for a sport where competitors would throw knives at each-other and whoever could catch it with their palm would win a prize! Now you can re-enact that beautiful sport again with these!",
-                	["weapontype"] = "Item",
-                	["name"] = "Throwing Knife",
-                	["damagerating"] = {
-                		[1] = 50,
-                		[2] = 50
-                	},
-                	["icon"] = "2481852009",
-                	["sizerating"] = 3,
-                	["woundrating"] = 1
-                }
+                if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
+                    WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
+                end
+                local Data = WeaponStats["TKnife"]
                 local CameraCFrame = game.Workspace.CurrentCamera.CFrame
                 local Position = CFrame.new(CameraCFrame.p + Vector3.new(math.random(-12,12),math.random(-3,12),5),mouse.Hit.p)
                 spawn(function()
