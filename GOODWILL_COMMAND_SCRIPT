@@ -38,9 +38,9 @@ local CurrentTrap = "Proximity Mine"
 local ToLoopDrop = ""
 local CurrentThrowable = "TKnife"
 -- local CameraShakeFunction
-local LoopedFeatures = {"KillAura","GrenadeRain","SuperRun","LoopDrop"}
+local LoopedFeatures = {"KillAura","GrenadeRain","SuperRun","LoopDrop","AntiVoteKick"}
 local DevWeapons = {"RVolver","JBox","LSMini","GMSword","EMSword","CMMaul","PLBlade"}
-local GuiCommands = {"InfClip","InfAmmo","Godmode","SemiGodmode","OneShot","NoCooldown","InfAux","SilentAim","AutoParry","KillAura","VirusBlock","AntiDebuff","NoHunger","AntiFallDamage","AntiRecoil","SuperRun"}
+local GuiCommands = {"InfClip","InfAmmo","Godmode","SemiGodmode","OneShot","NoCooldown","InfAux","SilentAim","AutoParry","KillAura","VirusBlock","AntiDebuff","NoHunger","AntiFallDamage","AntiRecoil","SuperRun","AntiVoteKick"}
 
 
 local Toggles = {
@@ -67,6 +67,7 @@ local Toggles = {
     InfAux = false;
     LoopDrop = false;
     ThrowingKnives = false;
+    AntiVoteKick = false;
 }
 
 
@@ -913,6 +914,21 @@ local function RenderStepped()
         end
         return
     end
+    if Toggles.AntiVoteKick then
+        local Players = {}
+        for i,v in pairs(game.Players:GetPlayers()) do
+            if v ~= game.Players.LocalPlayer then
+                table.insert(Players,v)
+            end
+        end
+        if #Players > 1 then
+            local Target = Players[math.random(0,#Players)]
+            if Target ~= nil then
+print("ya wtf")
+                game.Players:Chat("votekick/"..Target.Name)
+            end
+        end
+    end
     if Toggles.LoopDrop and not Debounces.LoopDrop and ToLoopDrop ~= "" then
         local Current = ToLoopDrop
         Debounces.LoopDrop = true
@@ -979,7 +995,12 @@ local function RenderStepped()
 end
 
 local function GrabMainScript()
-    local Script = game.Players.LocalPlayer.Backpack:FindFirstChildOfClass("LocalScript") -- this function will be useful if they decided to add more stuff of this style
+    local Script = nil
+    for i,v in pairs(game.Players.LocalPlayer.Backpack.GetChildren(game.Players.LocalPlayer.Backpack)) do
+        if v:IsA("LocalScript") and v.Name ~= "ClickDetectorScript" then
+            Script = v
+        end
+    end
     return Script
 end
 
@@ -3564,6 +3585,43 @@ local function CommandHandler(msg, speaker)
             end
             ToLoopDrop = ""
             currenttext = "LoopDrop is now OFF!"
+        end
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "notification";
+            Text = currenttext;
+            Icon = "rbxassetid://2541869220";
+            Duration = 3;
+        })
+        return
+    end
+
+    if IsInTable({"antivotekick","antivk","novk","vkblock","votekickblock","blockvotekick","novotekick","blockvk","unantivotekick","unantivk","unnovk","unvkblock","unvotekickblock","unblockvotekick","unnovotekick","unblockvk"}, Args.Command) then
+        local Toggle = true
+        if Args[1] == "true" or Args[1] == "on" then
+            Toggle = true
+        elseif Args[1] == "false" or Args[1] == "off" or string.sub(Args.Command, 1,2) == "un" then
+            Toggle = false
+        end
+        Toggles.AntiVoteKick = Toggle
+        local currenttext = ""
+        if Toggle == true then
+            if RenderStepConnection == nil then
+                RenderStepConnection = game:GetService("RunService").Stepped:Connect(RenderStepped)
+            end
+            currenttext = "AntiVoteKick is now ON!"
+        else
+            local LoopOff = false
+            for i = 1,#LoopedFeatures do
+                if Toggles[LoopedFeatures[i]] == true then
+                    LoopOff = true
+                    break
+                end
+            end
+            if RenderStepConnection ~= nil and LoopOff then
+                RenderStepConnection:Disconnect()
+                RenderStepConnection = nil
+            end
+            currenttext = "AntiVoteKick is now OFF!"
         end
         game.StarterGui:SetCore("SendNotification", {
             Title = "notification";
