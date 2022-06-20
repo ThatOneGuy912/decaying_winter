@@ -113,6 +113,15 @@ local Throwables = {
     ["Frag Grenade"] = "MGrenade";
     ["Impact Grenade"] = "ImpN";
     ["Touch Grenade"] = "ImpN";
+    ["Bomb Spear"] = "CRBSpear";
+    ["Spear"] = "CRBSpear";
+    ["Hot Dog"] = "CRBSpear";
+    ["HotDog"] = "CRBSpear";
+    ["Caltrops"] = "TCaltrop";
+    ["Spikes"] = "TCaltrop";
+    ["Throwing Axe"] = "TAxe";
+    ["Axe"] = "TAxe";
+    ["Hatchet"] = "TAxe";
 }
 
 local SuperRun = {
@@ -150,14 +159,17 @@ local NameToStat = {
     ["ROUNDS_PER_MINUTE"] = {
         Stat = "speedrating";
         Increment = -0.01;
+        BigIncrement = -0.1;
     };
     ["EFFECTIVE_RECOIL"] = {
         Stat = "woundrating";
         Increment = 2;
+        BigIncrement = 20;
     };
     ["FIREARM_INACCURACY"] = {
         Stat = "sizerating";
-        Increment = 1;
+        Increment = -1;
+        BigIncrement = -10;
     };
 
     ------- MELEE ------
@@ -195,10 +207,12 @@ local NameToStat = {
     ["LIMB_DAMAGE"] = {
         Stat = "damagerating";
         Increment = 5;
+        BigIncrement = 50;
     };
     ["HEAD_DAMAGE"] = {
         Stat = "damagerating";
         Increment = 5;
+        BigIncrement = 50;
     };
     ["SPEED_RATING"] = {
         Stat = "speedrating";
@@ -270,6 +284,8 @@ local Weapons = {
     ["Kel-Tec KSG"] = "KSG";
     ["KSG"] = "KSG";
     ["Bomb Spear"] = "CRBSpear";
+    ["Hot Dog"] = "CRBSpear";
+    ["HotDog"] = "CRBSpear";
     ["Kitchen Knife"] = "KitKnife";
     ["M60-E6"] = "SubLMG";
     ["LMG"] = "SubLMG";
@@ -1106,7 +1122,7 @@ end
 
 local function RemoveMark(child)
     if child.Name == "playerflagged" then
-        wait()
+        wait(0.1)
         child.Parent = nil
     end
 end
@@ -1611,7 +1627,14 @@ local function SetupGUI()
     end)
 
     for i,v in pairs(game.Players.LocalPlayer.PlayerGui.mainHUD.TabMenu.bg.weaponinfotab.founditem:GetChildren()) do
-        if string.find(v.Name, "line") and v.Name ~= "line1" and not string.find(v.Name, "more") and not string.find(v.Name, "less") then
+        if string.find(v.Name, "line") and v.Name ~= "line1" and not string.find(v.Name, "more") and not string.find(v.Name, "less") and not string.find(v.Name, "big") then
+            local Space = string.find(v.Text, ": ")
+            local StatName = ""
+            local StatPlacement = nil
+            if Space ~= nil then
+                StatName = string.sub(v.Text, 2, Space-1)
+                StatPlacement = NameToStat[StatName]
+            end
             local NewMoreButton = MoreButton:Clone()
             local NewLessButton = LessButton:Clone()
             NewMoreButton.Parent = game.Players.LocalPlayer.PlayerGui.mainHUD.TabMenu.bg.weaponinfotab.founditem
@@ -1620,9 +1643,31 @@ local function SetupGUI()
             NewLessButton.Position = UDim2.new(0.9,0,v.Position.Y.Scale,0)
             NewMoreButton.Name = v.Name.."more"
             NewLessButton.Name = v.Name.."less"
+
+            local NewBigMore = NewMoreButton:Clone()
+            local NewBigLess = NewLessButton:Clone()
+            NewBigMore.Parent = NewMoreButton.Parent
+            NewBigLess.Parent = NewMoreButton.Parent
+            NewBigMore.Name = NewBigMore.Name.."big"
+            NewBigLess.Name = NewBigLess.Name.."big"
+            NewBigMore.Position = UDim2.new(0.9,75,v.Position.Y.Scale,0)
+            NewBigLess.Position = UDim2.new(0.9,-35,v.Position.Y.Scale,0)
+            NewBigLess.icon.Text = "--"
+            NewBigMore.icon.Text = "++"
+
+            if StatPlacement ~= nil and StatPlacement["BigIncrement"] ~= nil then
+                NewBigMore.Visible = true
+                NewBigLess.Visible = true
+            else
+                NewBigMore.Visible = false
+                NewBigLess.Visible = false
+            end
+
             if v.Text == "" or string.find(v.Text, "RARITY") or string.find(v.Text, "HEAVY_SWING") then
                 NewMoreButton.Visible = false
                 NewLessButton.Visible = false
+                NewBigMore.Visible = false
+                NewBigLess.Visible = false
             end
             if string.find(v.Text, "TRUE") then
                 NewLessButton.Visible = false
@@ -1633,6 +1678,22 @@ local function SetupGUI()
             end
 
             v:GetPropertyChangedSignal("Text"):Connect(function()
+                local Space = string.find(v.Text, ": ")
+                local StatName = ""
+                local StatPlacement = nil
+                if Space ~= nil then
+                    StatName = string.sub(v.Text, 2, Space-1)
+                    StatPlacement = NameToStat[StatName]
+                end
+                if StatPlacement ~= nil and StatPlacement["BigIncrement"] ~= nil then
+                    NewBigMore.Visible = true
+                    NewBigLess.Visible = true
+                    NewBigLess.icon.Text = "--"
+                    NewBigMore.icon.Text = "++"
+                else
+                    NewBigMore.Visible = false
+                    NewBigLess.Visible = false
+                end
                 if string.find(v.Text, "TRUE") then
                     NewLessButton.Visible = false
                     NewMoreButton.icon.Text = "X"
@@ -1642,6 +1703,8 @@ local function SetupGUI()
                 elseif v.Text == "" or string.find(v.Text, "RARITY") or string.find(v.Text, "HEAVY_SWING") then
                     NewLessButton.Visible = false
                     NewMoreButton.Visible = false
+                    NewBigMore.Visible = false
+                    NewBigLess.Visible = false
                 else
                     NewLessButton.Visible = true
                     NewLessButton.icon.Text = "-"
@@ -1727,6 +1790,87 @@ local function SetupGUI()
                     end
                 end
             end)
+
+            NewBigMore.MouseButton1Down:Connect(function()
+                local Label = NewBigMore.Parent:FindFirstChild(string.sub(NewBigMore.Name,1,#NewBigMore.Name-7))
+                if Label == nil or ShownWeapon == nil then
+                    return
+                end
+                local Space = string.find(Label.Text, ": ")
+                local StatName = string.sub(Label.Text, 2, Space-1)
+                if NewBigMore.icon.Text == "++" then
+                    if WeaponStats == nil then
+                        WeaponStats = require(game.Workspace.ServerStuff.Statistics.W_STATISTICS)
+                    end
+                    local StatPlacement = NameToStat[StatName]
+                    if NameToStat[StatName].Index ~= nil then
+                        if WeaponStats[ShownWeapon][StatPlacement.Stat][tostring(StatPlacement.Index).."old"] == nil then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat][tostring(StatPlacement.Index).."old"] = WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index]
+                        end
+                        local Projected = WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] + StatPlacement.BigIncrement
+                        if Projected <= 0 then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] = 0
+                        else
+                            WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] = WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] + StatPlacement.BigIncrement
+                        end
+                    else
+                        if WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] == nil then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] = WeaponStats[ShownWeapon][StatPlacement.Stat]
+                        end
+                        local Projected = WeaponStats[ShownWeapon][StatPlacement.Stat] + StatPlacement.BigIncrement
+                        if Projected <= 0 then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = 0
+                        else
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = WeaponStats[ShownWeapon][StatPlacement.Stat] + StatPlacement.BigIncrement
+                        end
+                    end
+                elseif NewBigMore.icon.Text == "" then
+                    WeaponStats[ShownWeapon].auto = false
+                    NewBigMore.icon.Text = "X"
+                elseif NewBigMore.icon.Text == "X" then
+                    WeaponStats[ShownWeapon].auto = true
+                    NewBigMore.icon.Text = ""
+                end
+            end)
+          
+
+            NewBigLess.MouseButton1Down:Connect(function()
+                local Label = NewBigLess.Parent:FindFirstChild(string.sub(NewBigLess.Name,1,#NewBigLess.Name-7))
+                if Label == nil or ShownWeapon == nil then
+                    return
+                end
+                local Space = string.find(Label.Text, ": ")
+                local StatName = string.sub(Label.Text, 2, Space-1)
+                if NewBigLess.icon.Text == "--" then
+                    if WeaponStats == nil then
+                        WeaponStats = require(game.Workspace.ServerStuff.Statistics.W_STATISTICS)
+                    end
+                    local StatPlacement = NameToStat[StatName]
+                    if NameToStat[StatName].Index ~= nil then
+                        if WeaponStats[ShownWeapon][StatPlacement.Stat][tostring(StatPlacement.Index).."old"] == nil then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat][tostring(StatPlacement.Index).."old"] = WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index]
+                        end
+                        local Projected = WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] - StatPlacement.BigIncrement
+                        if Projected <= 0 then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] = 0
+                        else
+                            WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] = WeaponStats[ShownWeapon][StatPlacement.Stat][StatPlacement.Index] - StatPlacement.BigIncrement
+                        end
+                    else
+                        if WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] == nil then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] = WeaponStats[ShownWeapon][StatPlacement.Stat]
+                        end
+                        local Projected = WeaponStats[ShownWeapon][StatPlacement.Stat] - StatPlacement.BigIncrement
+                        if Projected <= 0 then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = 0
+                        else
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = WeaponStats[ShownWeapon][StatPlacement.Stat] - StatPlacement.BigIncrement
+                        end
+                    end
+                end
+            end)
+
+
         end
     end
 
@@ -1810,6 +1954,15 @@ local function SetupGUI()
 
     for i,v in pairs(FrameClone:GetChildren()) do
         if string.find(v.Name, "line") and v.Name ~= "line1" and not string.find(v.Name, "more") and not string.find(v.Name, "less") then
+            local Space = string.find(v.Text, ": ")
+            local StatName = ""
+            local StatPlacement = nil
+            if Space ~= nil then
+                StatName = string.sub(v.Text, 2, Space-1)
+                StatPlacement = NameToStat[StatName]
+                print("yuh")
+            end
+
             local NewMoreButton = MoreButton:Clone()
             local NewLessButton = LessButton:Clone()
             NewMoreButton.Parent = FrameClone
@@ -1818,6 +1971,25 @@ local function SetupGUI()
             NewLessButton.Position = UDim2.new(0.9,0,v.Position.Y.Scale,0)
             NewMoreButton.Name = v.Name.."more"
             NewLessButton.Name = v.Name.."less"
+
+            local NewBigMore = NewMoreButton:Clone()
+            local NewBigLess = NewLessButton:Clone()
+            NewBigMore.Parent = NewMoreButton.Parent
+            NewBigLess.Parent = NewMoreButton.Parent
+            NewBigMore.Name = NewBigMore.Name.."big"
+            NewBigLess.Name = NewBigLess.Name.."big"
+            NewBigMore.Position = UDim2.new(0.9,75,v.Position.Y.Scale,0)
+            NewBigLess.Position = UDim2.new(0.9,-35,v.Position.Y.Scale,0)
+            NewBigLess.icon.Text = "--"
+            NewBigMore.icon.Text = "++"
+
+            if StatPlacement ~= nil and StatPlacement["BigIncrement"] ~= nil then
+                NewBigMore.Visible = true
+                NewBigMore.Visible = true
+            else
+                NewBigMore.Visible = false
+                NewBigLess.Visible = false
+            end
 
             NewMoreButton.MouseButton1Down:Connect(function()
                 local Label = NewMoreButton.Parent:FindFirstChild(string.sub(NewMoreButton.Name,1,#NewMoreButton.Name-4))
@@ -1936,6 +2108,125 @@ local function SetupGUI()
                     end
                 end
             end)
+
+            NewBigMore.MouseButton1Down:Connect(function()
+                local Label = NewMoreButton.Parent:FindFirstChild(string.sub(NewMoreButton.Name,1,#NewMoreButton.Name-4))
+                if Label == nil or ShownWeapon == nil then
+                    return
+                end
+                local Space = string.find(Label.Text, ": ")
+                local StatName = string.sub(Label.Text, 2, Space-1)
+                if NewMoreButton.icon.Text == "+" then
+                    if WeaponStats == nil then
+                        WeaponStats = require(game.Workspace.ServerStuff.Statistics.W_STATISTICS)
+                    end
+                    local StatPlacement = NameToStat[StatName]
+                    if string.find(StatName, "DAMAGE") then
+                        local Index = #WeaponStats[ShownWeapon]["damagerating"]
+                        if string.find(StatName, "LIMB") and Index ~= 3 then
+                            Index = Index - 1
+                        end
+                        WeaponStats[ShownWeapon]["damagerating"][Index] = WeaponStats[ShownWeapon]["damagerating"][Index] + StatPlacement.BigIncrement
+                    else
+                        if WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] == nil then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] = WeaponStats[ShownWeapon][StatPlacement.Stat]
+                        end
+                        local Projected = WeaponStats[ShownWeapon][StatPlacement.Stat] + StatPlacement.BigIncrement
+                        if Projected <= 0 then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = 0
+                        else
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = WeaponStats[ShownWeapon][StatPlacement.Stat] + StatPlacement.BigIncrement
+                        end
+                    end
+                end
+                if ShownWeapon ~= nil and ShownWeapon ~= "" then
+                    if WeaponStats == nil then
+                        WeaponStats = require(game.Workspace.ServerStuff.Statistics.W_STATISTICS)
+                    end
+                    local ShownWeaponStats = WeaponStats[ShownWeapon]
+                    for x,y in pairs(FrameClone:GetChildren()) do
+                        if not string.find(y.Text, "DAMAGE") and string.find(y.Name, "line") and y.Name ~= "line1" and not string.find(y.Name, "more") and not string.find(y.Name, "less") then
+                            local Space2 = string.find(y.Text, ": ")
+                            local StatName2 = string.sub(y.Text, 2, Space2-1)
+                            if ShownWeaponStats[NameToStat[StatName2].Stat] ~= nil then
+                                y.Text = ">"..StatName2..": "..ShownWeaponStats[NameToStat[StatName2].Stat]
+                            else
+                                y.Text = ">"..StatName2..": N/A"
+                            end
+                        end
+                    end
+                    if #ShownWeaponStats["damagerating"] == 2 then
+                        FrameClone.line2.Text = ">LIMB_DAMAGE: "..ShownWeaponStats["damagerating"][1]
+                        FrameClone.line3.Text = ">HEAD_DAMAGE: "..ShownWeaponStats["damagerating"][2]
+                    elseif #ShownWeaponStats["damagerating"] == 3 then
+                        FrameClone.line2.Text = ">LIMB_DAMAGE: "..ShownWeaponStats["damagerating"][3]
+                        FrameClone.line3.Text = ">HEAD_DAMAGE: "..ShownWeaponStats["damagerating"][3]
+                    elseif #ShownWeaponStats["damagerating"] == 4 then
+                        FrameClone.line2.Text = ">LIMB_DAMAGE: "..ShownWeaponStats["damagerating"][3]
+                        FrameClone.line3.Text = ">HEAD_DAMAGE: "..ShownWeaponStats["damagerating"][4]
+                    end
+                end
+            end)
+
+            NewBigLess.MouseButton1Down:Connect(function()
+                local Label = NewLessButton.Parent:FindFirstChild(string.sub(NewLessButton.Name,1,#NewLessButton.Name-4))
+                if Label == nil or ShownWeapon == nil then
+                    return
+                end
+                local Space = string.find(Label.Text, ": ")
+                local StatName = string.sub(Label.Text, 2, Space-1)
+                if NewLessButton.icon.Text == "-" then
+                    if WeaponStats == nil then
+                        WeaponStats = require(game.Workspace.ServerStuff.Statistics.W_STATISTICS)
+                    end
+                    local StatPlacement = NameToStat[StatName]
+                    if string.find(StatName, "DAMAGE") then
+                        local Index = #WeaponStats[ShownWeapon]["damagerating"]
+                        if string.find(StatName, "LIMB") and Index ~= 3 then
+                            Index = Index - 1
+                        end
+                        WeaponStats[ShownWeapon]["damagerating"][Index] = WeaponStats[ShownWeapon]["damagerating"][Index] - StatPlacement.BigIncrement
+                    else
+                        if WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] == nil then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat.."old"] = WeaponStats[ShownWeapon][StatPlacement.Stat]
+                        end
+                        local Projected = WeaponStats[ShownWeapon][StatPlacement.Stat] - StatPlacement.BigIncrement
+                        if Projected <= 0 then
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = 0
+                        else
+                            WeaponStats[ShownWeapon][StatPlacement.Stat] = WeaponStats[ShownWeapon][StatPlacement.Stat] - StatPlacement.BigIncrement
+                        end
+                    end
+                end
+                if ShownWeapon ~= nil and ShownWeapon ~= "" then
+                    if WeaponStats == nil then
+                        WeaponStats = require(game.Workspace.ServerStuff.Statistics.W_STATISTICS)
+                    end
+                    local ShownWeaponStats = WeaponStats[ShownWeapon]
+                    for x,y in pairs(FrameClone:GetChildren()) do
+                        if not string.find(y.Text, "DAMAGE") and string.find(y.Name, "line") and y.Name ~= "line1" and not string.find(y.Name, "more") and not string.find(y.Name, "less") then
+                            local Space2 = string.find(y.Text, ": ")
+                            local StatName2 = string.sub(y.Text, 2, Space2-1)
+                            if ShownWeaponStats[NameToStat[StatName2].Stat] ~= nil then
+                                y.Text = ">"..StatName2..": "..ShownWeaponStats[NameToStat[StatName2].Stat]
+                            else
+                                y.Text = ">"..StatName2..": N/A"
+                            end
+                        end
+                    end
+                    if #ShownWeaponStats["damagerating"] == 2 then
+                        FrameClone.line2.Text = ">LIMB_DAMAGE: "..ShownWeaponStats["damagerating"][1]
+                        FrameClone.line3.Text = ">HEAD_DAMAGE: "..ShownWeaponStats["damagerating"][2]
+                    elseif #ShownWeaponStats["damagerating"] == 3 then
+                        FrameClone.line2.Text = ">LIMB_DAMAGE: "..ShownWeaponStats["damagerating"][3]
+                        FrameClone.line3.Text = ">HEAD_DAMAGE: "..ShownWeaponStats["damagerating"][3]
+                    elseif #ShownWeaponStats["damagerating"] == 4 then
+                        FrameClone.line2.Text = ">LIMB_DAMAGE: "..ShownWeaponStats["damagerating"][3]
+                        FrameClone.line3.Text = ">HEAD_DAMAGE: "..ShownWeaponStats["damagerating"][4]
+                    end
+                end
+            end)
+
         end
     end
 end
