@@ -4004,11 +4004,8 @@ print([[
 
 COMMANDS CAN BE DONE AS /e command OR :command
 
-:god - Gives you an obscene amount of health (VERY obvious to teammates)
-:ungod - Brings you back to normal health
-
-:sgod - Regens you when you take damage. (Won't save you from dynamite)
-:unsgod -- Turns off semi godmode
+:god - Regens you when you take damage. (Won't save you from dynamite)
+:ungod -- Turns off semi godmode
 
 :nodebuff - Blocks all status effects. Moral, burning, bleeding, broken limbs, etc
 :unnodebuff - Turns off no-debuff
