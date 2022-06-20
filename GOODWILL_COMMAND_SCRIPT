@@ -990,20 +990,35 @@ local function RenderStepped()
     end
 end
 
+local function GrabMainScript()
+    local Script = game.Players.LocalPlayer.Backpack:FindFirstChildOfClass("LocalScript") -- this function will be useful if they decided to add more stuff of this style
+    return Script
+end
+
 local function GrabEssentials()
     local FunnyPlace = getrenv()._G
-    local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+    local TempEnv = getsenv(GrabMainScript())
     repeat
         FunnyPlace = getrenv()._G
-        TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        TempEnv = getsenv(GrabMainScript())
         wait(0.3)
     until FunnyPlace["keylist"] ~= nil and TempEnv["afflictstatus"] ~= nil and TempEnv["drop_slide"] ~= nil
     wait(1)
-    if FunnyPlace["keylist"] ~= nil then
-         _G.Code1 = FunnyPlace[FunnyPlace.keylist[workspace.ServerStuff.ask:InvokeServer("mainHandler", true)]]
-    end
-    if TempEnv["afflictstatus"] ~= nil and _G.Code1 ~= nil then
+    if TempEnv["afflictstatus"] ~= nil then
         local upvalues = getupvalues(TempEnv.afflictstatus)
+        for i,v in pairs(upvalues) do
+            if _G.Code1 ~= nil then
+                break
+            end
+            if typeof(v) == "number" then
+                for x,y in pairs(FunnyPlace) do
+                    if y == v then
+                        _G.Code1 = v
+                        break
+                    end
+                end
+            end
+        end
         local CorrectIndex = math.huge
         for i,v in pairs(upvalues) do
             if v == _G.Code1 and tonumber(i) ~= nil then
@@ -1146,7 +1161,7 @@ end
 
 local function ClipChanged()
     if Toggles.InfClip--[[ and not string.find(string.lower(ClipLabel.Text), "inf")]] then
-        local Pee = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local Pee = getsenv(GrabMainScript())
         local GetSex = getupvalues(Pee.unloadgun)
         for i,v in pairs(GetSex) do
             if typeof(v) == "table"  then
@@ -2868,7 +2883,7 @@ local function CommandHandler(msg, speaker)
         Toggles.InfClip = Toggle
         local currenttext = ""
         if Toggle == true then
-            local Pee = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+            local Pee = getsenv(GrabMainScript())
             local GetSex = getupvalues(Pee.unloadgun)
             for i,v in pairs(GetSex) do
                 if typeof(v) == "table"  then
@@ -2891,7 +2906,7 @@ local function CommandHandler(msg, speaker)
             GetSex = nil
             currenttext = "InfMag is now ON!"
         else
-            local Pee = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+            local Pee = getsenv(GrabMainScript())
             local GetSex = getupvalues(Pee.unloadgun)
             for i,v in pairs(GetSex) do
                 if typeof(v) == "table"  then
@@ -2929,7 +2944,7 @@ local function CommandHandler(msg, speaker)
         end
         Toggles.AntiRecoil = Toggle
         local currenttext = ""
-        local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local TempEnv = getsenv(GrabMainScript())
         if Toggle == true then
             local Env = require(game.Workspace.ServerStuff.Statistics.W_STATISTICS)
             for i,v in pairs(Env) do
@@ -3229,9 +3244,9 @@ local function CommandHandler(msg, speaker)
         --game.Workspace.ServerStuff.dealDamage:FireServer("putbackpack", nil, _G.Code1, _G.Code2);
         game.Players.LocalPlayer.PlayerGui.mainHUD.InventoryFrame.slot6.Visible = true;
         game.Players.LocalPlayer.PlayerGui.mainHUD.InventoryFrame.slot5.Visible = true;
-        local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local TempEnv = getsenv(GrabMainScript())
         local TempUpValues = getupvalues(TempEnv.start_dual_wield)
-        local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local TempEnv = getsenv(GrabMainScript())
         local TempUpValues = getupvalues(TempEnv.start_dual_wield)
         local InvTable = nil
         for i,v in pairs(TempUpValues) do
@@ -3258,7 +3273,7 @@ local function CommandHandler(msg, speaker)
         if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
             WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
         end
-        local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local TempEnv = getsenv(GrabMainScript())
         local TempUpValues = getupvalues(TempEnv.start_dual_wield)
         local InvTable = nil
         for i,v in pairs(TempUpValues) do
@@ -3333,7 +3348,7 @@ local function CommandHandler(msg, speaker)
     end
 --[[
     if IsInTable({"teamkill","enemy","nemesis","scavmode","enemymode"}, Args.Command) then
-        local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local TempEnv = getsenv(GrabMainScript())
         local TempUpValues = getupvalues(TempEnv.start_dual_wield)
         local InvTable = nil
         for i,v in pairs(TempUpValues) do
@@ -3422,7 +3437,7 @@ local function CommandHandler(msg, speaker)
         if Toggle == true then
             currenttext = "InfAux is now ON!"
         else
-            local Env = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+            local Env = getsenv(GrabMainScript())
             Env["aux_usage"] = 1
             currenttext = "InfAux is now OFF!"
         end
@@ -3486,7 +3501,7 @@ local function CommandHandler(msg, speaker)
         if WeaponStats == nil and game.Workspace:FindFirstChild("ServerStuff") and game.Workspace.ServerStuff:FindFirstChild("Statistics") and game.Workspace.ServerStuff.Statistics:FindFirstChild("W_STATISTICS") then
             WeaponStats = require(game.Workspace.ServerStuff.Statistics["W_STATISTICS"])
         end
-        local TempEnv = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local TempEnv = getsenv(GrabMainScript())
         local TempUpValues = getupvalues(TempEnv.start_dual_wield)
         local InvTable = nil
         for i,v in pairs(TempUpValues) do
@@ -3718,7 +3733,7 @@ mouse.KeyDown:Connect(function(key)
     end
 --]]
     if key == "c" and Toggles.InfAux then
-        local Env = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+        local Env = getsenv(GrabMainScript())
         if Env["aux_usage"] ~= nil and Env["aux_usage"] <= 0 then
             if Env["use_aux"] ~= nil then
                 Env["aux_usage"] = math.huge
@@ -3830,7 +3845,7 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
     repeat wait() until game.Players.LocalPlayer:FindFirstChild("PlayerGui")
     repeat wait() until game.Players.LocalPlayer:FindFirstChild("Backpack")
     repeat wait() until game.Players.LocalPlayer.PlayerGui:FindFirstChild("mainHUD")
-    repeat wait() until game.Players.LocalPlayer.Backpack:FindFirstChild("mainHandler")
+    repeat wait() until game.Players.LocalPlayer.Backpack:FindFirstChildOfClass("LocalScript")
     repeat wait() until game.Players.LocalPlayer.PlayerGui.mainHUD:FindFirstChild("HealthFrame")
     repeat wait() until game.Players.LocalPlayer.PlayerGui.mainHUD.HealthFrame:FindFirstChild("Statuses")
     local FunnyPlace = getrenv()._G
@@ -3870,7 +3885,7 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
 end)
 
 repeat wait() until game.Players.LocalPlayer:FindFirstChild("Backpack")
-repeat wait() until game.Players.LocalPlayer.Backpack:FindFirstChild("mainHandler")
+repeat wait() until game.Players.LocalPlayer.Backpack:FindFirstChildOfClass("LocalScript")
 
 if game.Players.LocalPlayer.Character ~= nil then
     GrabEssentials()
@@ -3945,7 +3960,7 @@ game.Workspace.DescendantAdded:Connect(function(v)
         if string.find(v.Name, "AKIMBO") then
             AkimboActive = true
             v.AncestryChanged:Connect(AkimboChanged)
-            local Pee = getsenv(game.Players.LocalPlayer.Backpack.mainHandler)
+            local Pee = getsenv(GrabMainScript())
             local GetSex = getupvalues(Pee.unloadgun)
             for i,v in pairs(GetSex) do
                 if typeof(v) == "table"  then
@@ -3991,9 +4006,9 @@ game.Players.ChildAdded:Connect(function(child)
         end
     end
 end)
-
+print("so what the fuck")
 repeat wait() until _G.Code1 ~= nil and _G.Code2 ~= nil
-
+print("so what the fuck 2")
 if _G.Code1 ~= nil and _G.Code2 ~= nil then
     game.StarterGui:SetCore("SendNotification", {
         Title = 'GOODWILL';
