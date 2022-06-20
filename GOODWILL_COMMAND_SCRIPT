@@ -3992,8 +3992,6 @@ game.Players.ChildAdded:Connect(function(child)
     end
 end)
 
-SetupGUI()
-
 repeat wait() until _G.Code1 ~= nil and _G.Code2 ~= nil
 
 if _G.Code1 ~= nil and _G.Code2 ~= nil then
@@ -4108,3 +4106,5 @@ else
         Duration = 7;
     })
 end
+
+SetupGUI()
