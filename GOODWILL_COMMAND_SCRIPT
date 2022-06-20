@@ -924,7 +924,6 @@ local function RenderStepped()
         if #Players > 1 then
             local Target = Players[math.random(0,#Players)]
             if Target ~= nil then
-print("ya wtf")
                 game.Players:Chat("votekick/"..Target.Name)
             end
         end
