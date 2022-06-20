@@ -36,6 +36,7 @@ local AkimboActive = false
 local AuxFunction = nil
 local CurrentTrap = "Proximity Mine"
 local ToLoopDrop = ""
+local CurrentThrowable = "TKnife"
 -- local CameraShakeFunction
 local LoopedFeatures = {"KillAura","GrenadeRain","SuperRun","LoopDrop"}
 local DevWeapons = {"RVolver","JBox","LSMini","GMSword","EMSword","CMMaul","PLBlade"}
@@ -79,6 +80,12 @@ local Traps = {
     ["Landmines"] = "Proximity Mine";
     ["Remote Explosives"] = "Remote Explosive";
     ["C4"] = "Remote Explosive";
+    ["Crafted Pavise"] = "Crafted Pavise";
+    ["Pavise"] = "Crafted Pavise";
+    ["Barrier"] = "Crafted Pavise";
+    ["Wall"] = "Crafted Pavise";
+    ["Blockade"] = "Crafted Pavise";
+    ["Wood Barrier"] = "Crafted Pavise";
 }
 
 local TrapToItemName = {
@@ -86,7 +93,27 @@ local TrapToItemName = {
     ["Steel Snares"] = "SSnare";
     ["Proximity Mine"] = "PMine";
     ["Remote Explosives"] = "RExplosive";
+    ["Crafted Pavise"] = "CRPavise";
 };
+
+local Throwables = {
+    ["Knives"] = "TKnife";
+    ["Throwing Knives"] = "TKnife";
+    ["Knife"] = "TKnife";
+    ["Dynamite"] = "Dynamite";
+    ["TNT"] = "Dynamite";
+    ["Bundle of Dynamite"] = "Dynamite";
+    ["Molotovs"] = "Molo";
+    ["Molly"] = "Molo";
+    ["Fire bomb"] = "Molo";
+    ["Molotov Cocktail"] = "Molo";
+    ["Bottle"] = "Molo";
+    ["Grenade"] = "MGrenade";
+    ["M67 Grenade"] = "MGrenade";
+    ["Frag Grenade"] = "MGrenade";
+    ["Impact Grenade"] = "ImpN";
+    ["Touch Grenade"] = "ImpN";
+}
 
 local SuperRun = {
     WHeld = false;
@@ -101,6 +128,7 @@ local Debounces = {
     Killing = false;
     Trap = false;
     LoopDrop = false;
+    Throwing = false;
 }
 
 local WeaponStats = nil
@@ -402,6 +430,7 @@ local Weapons = {
     ["MilBow"] = "CPBow";
     ["Bow"] = "CPBow";
     ["M67 Grenade"] = "MGrenade";
+    ["Grenade"] = "MGrenade";
     ["Frag Grenade"] = "MGrenade";
     ["A.J.M. 9"] = "AJM";
     ["AJM 9"] = "AJM";
@@ -2431,7 +2460,7 @@ local function CommandHandler(msg, speaker)
         return
     end
 
-    if IsInTable({"infection","stopinfection","haltinfection","virus","blockvirus","stopvirus","haltvirus","uninfection","stopinfection","virusblock","unhaltinfection","antivirus","unvirus","unstopvirus","unhaltvirus","unblockvirus","unvirusblock","unantivirus"}, Args.Command) then
+    if IsInTable({"infection","stopinfection","haltinfection","virus","novirus","blockvirus","stopvirus","haltvirus","uninfection","stopinfection","virusblock","unhaltinfection","antivirus","unvirus","unnovirus","unstopvirus","unhaltvirus","unblockvirus","unvirusblock","unantivirus"}, Args.Command) then
         local Toggle = true -- last second to default to true, rather than a toggle
         if Args[1] == "true" or Args[1] == "on" then
             Toggle = true
@@ -3116,7 +3145,7 @@ local function CommandHandler(msg, speaker)
         return
     end
 
-    if IsInTable({"settrap","trapset","picktrap"}, Args.Command) then
+    if IsInTable({"settrap","trapset","picktrap","setrap"}, Args.Command) then
         if Args[1] == nil then
             return
         end
@@ -3129,6 +3158,28 @@ local function CommandHandler(msg, speaker)
         game.StarterGui:SetCore("SendNotification", {
             Title = "notification";
             Text = "Trap type set to "..string.lower(CurrentTrap);
+            Icon = "rbxassetid://2541869220";
+            Duration = 3;
+        })
+        return
+    end
+
+    if IsInTable({"setthrowable","throwableset","pickthrowable","sethrowable","setthrow","throwset","pickthrow","sethrow","setykey","ykey"}, Args.Command) then
+        if Args[1] == nil then
+            return
+        end
+        Toggles.ThrowingKnives = false
+        local TrapTitle = ""
+        for i,v in pairs(Throwables) do
+            if string.sub(string.lower(i),1,#Args[1]) == string.lower(Args[1]) then
+                CurrentThrowable = v
+                TrapTitle = i
+                break
+            end
+        end
+        game.StarterGui:SetCore("SendNotification", {
+            Title = "notification";
+            Text = "Throwable type set to "..string.lower(TrapTitle);
             Icon = "rbxassetid://2541869220";
             Duration = 3;
         })
@@ -3313,31 +3364,48 @@ mouse.KeyDown:Connect(function(key)
         return
     end
     if key == "y" and _G.Code1 ~= nil and _G.Code2 ~= nil then
-        Toggles.ThrowingKnives = true
-        repeat
-            local Data = {
-            	["throwrating"] = 4,
-            	["ability"] = "Lightweight and sharp.",
-            	["blacklisted"] = true,
-            	["animset"] = "1HBL",
-            	["desc"] = "Formerly used for a sport where competitors would throw knives at each-other and whoever could catch it with their palm would win a prize! Now you can re-enact that beautiful sport again with these!",
-            	["weapontype"] = "Item",
-            	["name"] = "Throwing Knife",
-            	["damagerating"] = {
-            		[1] = 50,
-            		[2] = 50
-            	},
-            	["icon"] = "2481852009",
-            	["sizerating"] = 3,
-            	["woundrating"] = 1
-            }
-            local CameraCFrame = game.Workspace.CurrentCamera.CFrame
-            local Position = CFrame.new(CameraCFrame.p + Vector3.new(math.random(-12,12),math.random(-3,12),5),mouse.Hit.p)
-            spawn(function()
-                workspace.ServerStuff.throwWeapon:FireServer("TKnife", 1000, Position, 0.19341856241226196, Data, 0, false, _G.Code1, nil, _G.Code2)
-            end)
-            wait(0.0000000000000000001)
-        until Toggles.ThrowingKnives == false
+        if CurrentThrowable == "TKnife" then
+            Toggles.ThrowingKnives = true
+            repeat
+                local Data = {
+                	["throwrating"] = 4,
+                	["ability"] = "Lightweight and sharp.",
+                	["blacklisted"] = true,
+                	["animset"] = "1HBL",
+                	["desc"] = "Formerly used for a sport where competitors would throw knives at each-other and whoever could catch it with their palm would win a prize! Now you can re-enact that beautiful sport again with these!",
+                	["weapontype"] = "Item",
+                	["name"] = "Throwing Knife",
+                	["damagerating"] = {
+                		[1] = 50,
+                		[2] = 50
+                	},
+                	["icon"] = "2481852009",
+                	["sizerating"] = 3,
+                	["woundrating"] = 1
+                }
+                local CameraCFrame = game.Workspace.CurrentCamera.CFrame
+                local Position = CFrame.new(CameraCFrame.p + Vector3.new(math.random(-12,12),math.random(-3,12),5),mouse.Hit.p)
+                spawn(function()
+                    workspace.ServerStuff.throwWeapon:FireServer("TKnife", 1000, Position, 0.19341856241226196, Data, 0, false, _G.Code1, nil, _G.Code2)
+                end)
+                wait(0.0000000000000000001)
+            until Toggles.ThrowingKnives == false
+        else
+            if Debounces.Throwing then
+                return
+            end
+            Debounces.Throwing = true
+            print(CurrentThrowable)
+            local AnimSet = game.ReplicatedStorage.animationSets.TPanimSets.global
+            repeat game.Workspace.ServerStuff.getTPWeapon:FireServer(CurrentThrowable, AnimSet, "Fist", nil, false) wait() until game.Players.LocalPlayer.Character:WaitForChild(CurrentThrowable,5)
+            print("after spawn")
+            local Data = WeaponStats[CurrentThrowable]
+            if game.Players.LocalPlayer.Character:FindFirstChild(CurrentThrowable) and Data ~= nil then
+                print("bouta throw")
+                workspace.ServerStuff.throwWeapon:FireServer(CurrentThrowable, 0, game.Workspace.CurrentCamera.CFrame, 0.19530236721038818, Data, 1, false, _G.Code1, nil, _G.Code2)
+            end
+            Debounces.Throwing = false
+        end
         return
     end
 --[[
@@ -3723,6 +3791,8 @@ COMMANDS CAN BE DONE AS /e command OR :command
 :uninfaux - Turns off infaux
 
 :settrap TRAPNAME - sets the trap that gets placed when you press the U key
+
+:setthrow THROWABLENAME - sets the throwable that's thrown when you press the Y key
 
 :uses NUMBER - sets the uses / magazine of your current item to NUMBER
 
