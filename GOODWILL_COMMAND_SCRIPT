@@ -1960,7 +1960,6 @@ local function SetupGUI()
             if Space ~= nil then
                 StatName = string.sub(v.Text, 2, Space-1)
                 StatPlacement = NameToStat[StatName]
-                print("yuh")
             end
 
             local NewMoreButton = MoreButton:Clone()
@@ -3686,13 +3685,10 @@ mouse.KeyDown:Connect(function(key)
                 return
             end
             Debounces.Throwing = true
-            print(CurrentThrowable)
             local AnimSet = game.ReplicatedStorage.animationSets.TPanimSets.global
             repeat game.Workspace.ServerStuff.getTPWeapon:FireServer(CurrentThrowable, AnimSet, "Fist", nil, false) wait() until game.Players.LocalPlayer.Character:WaitForChild(CurrentThrowable,5)
-            print("after spawn")
             local Data = WeaponStats[CurrentThrowable]
             if game.Players.LocalPlayer.Character:FindFirstChild(CurrentThrowable) and Data ~= nil then
-                print("bouta throw")
                 workspace.ServerStuff.throwWeapon:FireServer(CurrentThrowable, 0, game.Workspace.CurrentCamera.CFrame, 0.19530236721038818, Data, 1, false, _G.Code1, nil, _G.Code2)
             end
             Debounces.Throwing = false
@@ -3819,9 +3815,6 @@ Humanoid.HealthChanged:Connect(HealthChanged)
 game.Players.LocalPlayer.Character.Head.ChildAdded:Connect(RemoveMark)
 
 repeat wait() until game.Workspace:FindFirstChild("activePlayers")
-game.Workspace.activePlayers.ChildAdded:Connect(function(child)
-    -- print("PISSSSSSSSSS")
-end)
 
 game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
     _G.Code1 = nil
@@ -3833,7 +3826,6 @@ game.Players.LocalPlayer.CharacterAdded:Connect(function(character)
     for i,v in pairs(character.Head:GetChildren()) do
         RemoveMark(v)
     end
-    -- print("peesuck")
     Humanoid.HealthChanged:Connect(HealthChanged)
     repeat wait() until game.Players.LocalPlayer:FindFirstChild("PlayerGui")
     repeat wait() until game.Players.LocalPlayer:FindFirstChild("Backpack")
