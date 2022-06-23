@@ -1,4 +1,4 @@
--- DECOMPILED JUNE 20TH 2022
+-- DECOMPILED JUNE 23TH 2022
 -- Decompiled with the Synapse X Luau decompiler.
 
 script.Name = game:GetService("HttpService"):GenerateGUID(false);
@@ -25269,4 +25269,4 @@ u35(10, "HOME SUPPLIES");
 if character:FindFirstChild("Outfit") and character:FindFirstChild("Outfit"):FindFirstChild("Bottom") then
 	character:FindFirstChild("Outfit"):FindFirstChild("Bottom"):Clone().Parent = l__workspace__1.Camera;
 end;
--- DECOMPILED JUNE 20TH 2022
+-- DECOMPILED JUNE 23TH 2022
